@@ -2,52 +2,40 @@
 
 echo ""
 echo " ========================================================= "
-echo " \\            ubuntu 环境部署脚本           / "
-echo " \\            默认安装git、zsh、ssh、vscode           / "
+echo "            ubuntu 环境部署脚本            "
+echo "             默认安装git、zsh、ssh、vscode            "
 echo " ========================================================= "
 echo " # author: heavenmei                  "
-echo -e "\\n"
+echo -e "\n"
 
-chmod -R 777 ./
-#科学上网
-sh -c "$(source <(curl -s 172.23.148.93/s/ecnuproxy.sh))"
+sudo chmod -R 777 ./
+# source <(curl -s 172.23.148.93/s/ecnuproxy.sh)
 
 # basic tools
 system_config() {
     echo "[Tips]: apt updating "
-    apt update && sudo apt upgrade -y
-    # 常用软件安装
-    cmdline=(
-        "which lsof"
-        "which man"
-        "which tmux"
-        "which htop"
-        "which autojump"
-        "which iotop"
-        "which ncdu"
-        "which jq"
-        "which telnet"
-        "which p7zip"
-        "which axel"
-        "which rename"
-        "which vim"
-        "which sqlite3"
-        "which lrzsz"
-        "which unzip"
-        "which git"
-        "which curl"
-        "which wget"
-    )
+    sudo apt upgrade -y
+    echo "[Tips]: apt update done "
+    cmdline=(lsof git curl wget unzip rename)
     for prog in "${cmdline[@]}"; do
-        soft=$($prog)
-        if [ "$soft" ] >/dev/null 2>&1; then
-            echo -e "[Tips]: $soft installed, skip!"
+        if command -v "$prog" >/dev/null 2>&1; then
+            echo -e "[Tips]: $prog installed, skip!"
         else
-            name=$(echo -e "$prog" | ag -o '[\w-]+$')
-            apt install -y "${name}" >/dev/null 2>&1
-            echo -e "[Tips]: ${name} installing..."
+            sudo apt install -y "$prog" >/dev/null
+            if [ $? -eq 0 ]; then
+                echo -e "[Tips]: $prog install success..."
+            else
+                echo -e "[Tips]:\033[31m ${prog} install error \033[0m"
+            fi
         fi
     done
+    # vim 单独安装
+    sudo apt install -y vim >/dev/null
+    if [ $? -eq 0 ]; then
+        echo -e "[Tips]: $prog install success..."
+    else
+        echo -e "[Tips]:\033[31m ${prog} install error \033[0m"
+    fi
 }
 
 # zsh
@@ -79,23 +67,31 @@ install_zsh() {
 
 # git
 init_git() {
-    if command -v giy >/dev/null 2>&1; then
+    if command -v git >/dev/null 2>&1; then
         echo -e "[Tips]: git installed, skip!"
     else
         echo -e "[Tips]: git installing..."
         apt install git
-        git --version
-        read -p "Enter your git username:" username
-        git config --global username "$username"
+    fi
+    git --version
+    userName=$(git config user.name)
+    if [ ! -n "$userName" ]; then
+        read -p "Enter your git username:" userName
+        git config --global user.name "$userName"
+    fi
+    userEmail=$(git config user.email)
+    if [ ! -n "$userEmail" ]; then
         read -p "Enter your git user.email:" userEmail
         git config --global user.email "$userEmail"
-        git config --list
-        echo "[Tips]: git init completed! "
     fi
+    git config --list
+    echo "[Tips]: git init completed! "
+
 }
 
 system_config
 init_git
+install_zsh
 
 # PS3='Please enter your choice: '
 # options=("vscode" "node" "python" "Quit")
