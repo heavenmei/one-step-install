@@ -3,25 +3,31 @@
 echo ""
 echo " ========================================================= "
 echo "            ubuntu 环境部署脚本            "
-echo "             默认安装git、zsh、ssh、vscode            "
+echo "            默认安装git、zsh、ssh、vscode、node、python            "
 echo " ========================================================= "
 echo " # author: heavenmei                  "
 echo -e "\n"
 
 sudo chmod -R 777 ./
-# source <(curl -s 172.23.148.93/s/ecnuproxy.sh)
+curl -s 172.23.148.93/s/ecnuproxy.sh | bash
+
+uninstall() {
+    rm -rf "$HOME"/.zsh*
+    rm -rf "$HOME"/zsh*
+    rm -rf .oh-my-zsh
+}
 
 # basic tools
 system_config() {
     echo "[Tips]: apt updating "
     sudo apt upgrade -y
     echo "[Tips]: apt update done "
-    cmdline=(lsof git curl wget unzip rename)
+    cmdline=(lsof git curl wget unzip rename openssh-server autojump tmux)
     for prog in "${cmdline[@]}"; do
-        if command -v "$prog" >/dev/null 2>&1; then
+        if command -v "$prog" >/dev/null >&1; then
             echo -e "[Tips]: $prog installed, skip!"
         else
-            sudo apt install -y "$prog" >/dev/null
+            sudo apt install -y "$prog" >/dev/null >&1
             if [ $? -eq 0 ]; then
                 echo -e "[Tips]: $prog install success..."
             else
@@ -40,29 +46,33 @@ system_config() {
 
 # zsh
 install_zsh() {
-    if command -v zsh >/dev/null 2>&1; then
+    if command -v zsh >/dev/null >&1; then
         echo -e "[Tips]: zsh installed, skip!"
     else
         echo -e "[Tips]: zsh installing..."
-        apt install -y zsh >/dev/null 2>&1
+        sudo apt install -y zsh >/dev/null >&1
+        chsh -s $(which zsh)
+
         echo -e "[Tips]: ohmyzsh configuration starting... "
-        sh -c "$(wget -O- https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
-        chsh -s /bin/zsh
-        echo -e "[Tips]: dracula theme configuring... "
-        git clone git://github.com/zsh-users/zsh-syntax-highlighting "$ZSH_CUSTOM"/themes >/dev/null 2>&1
-        sed -i 's@ZSH_THEME="dracula"@ZSH_THEME="xiong-chiamiov-plus"@g' ~/.zshrc
-        sed -i 's@plugins=(.*)@plugins=(git extract zsh-syntax-highlighting autojump zsh-autosuggestions)@g' ~/.zshrc
-        {
-            echo 'alias cat="/usr/bin/bat"'
-            echo 'alias myip="curl ifconfig.io/ip"'
-            echo 'alias c=clear'
-        } >>~/.zshrc
-        echo -e "[Tips]: zsh-syntax-highlighting plugin downloading... "
-        git clone git://github.com/zsh-users/zsh-syntax-highlighting "$ZSH_CUSTOM"/plugins/zsh-syntax-highlighting >/dev/null 2>&1
-        echo -e "[Tips]: zsh-autosuggestions plugin  downloading... "
-        git clone https://github.com/zsh-users/zsh-autosuggestions.git "$ZSH_CUSTOM"/plugins/zsh-autosuggestions >/dev/null 2>&1
-        source ~/.zshrc
+        echo "[!] ENTER exit manually!"
+        echo "[!] 请手动 exit 才可以继续后续插件的安装（原因在于oh-my-zsh官方安装脚本会启动zsh）"
+        sh -c "$(wget https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh -O-)"
+
     fi
+}
+
+install_zsh_plugins() {
+    # install dracula
+
+    # install zsh-autosuggestions
+    echo "[*]: Installing autosuggestions plugin..."
+    git clone https://github.com/zsh-users/zsh-autosuggestions "${ZSH_CUSTOM:-~/.oh-my-zsh/custom}"/plugins/zsh-autosuggestions
+
+    # install zsh-syntax-highlighting
+
+    echo "[*]: Installing text highlighting plugin..."
+    git clone https://github.com/zsh-users/zsh-syntax-highlighting.git "${ZSH_CUSTOM:-~/.oh-my-zsh/custom}"/plugins/zsh-syntax-highlighting
+
 }
 
 # git
@@ -84,31 +94,73 @@ init_git() {
         read -p "Enter your git user.email:" userEmail
         git config --global user.email "$userEmail"
     fi
-    git config --list
+    # git config --list
     echo "[Tips]: git init completed! "
 
+}
+
+# vscode
+install_vscode() {
+    if command -v vscode >/dev/null 2>&1; then
+        echo -e "[Tips]: vscode installed, skip!"
+    else
+        echo -e "[Tips]: vscode installing..."
+        sudo apt install software-properties-common apt-transport-https curl >&1
+        curl -sSL https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add - >&1
+        sudo add-apt-repository "deb [arch=amd64] https://packages.microsoft.com/repos/vscode stable main" >&1
+        sudo apt install code >&1
+        echo -e "[Tips]: vscode install success.."
+    fi
+}
+
+# conda & python3
+install_python() {
+    echo -e "apt-get install -y python3-pip"
+    apt-get install -y python3-pip >/dev/null >&1
+
+    echo -e "[Tips]: Anaconda3-5.2.0-Linux-x86_64.sh installing... "
+    curl -O https://repo.anaconda.com/archive/Anaconda3-5.2.0-Linux-x86_64.sh | bash >&1
+    echo -e "[Tips]: Anaconda3-5.2.0-Linux-x86_64.sh install sucess ! "
+}
+# docker
+install_docker() {
+    if command -v docker >/dev/null 2>&1; then
+        echo -e "[Tips]: docker installed, skip!"
+    else
+        echo -e "[Tips]: docker installing..."
+        curl -fsSL https://get.docker.com -o get-docker.sh
+    fi
+}
+# Nodejs
+install_node() {
+    if command -v nvm >/dev/null 2>&1; then
+        echo -e "[Tips]: nvm installed, skip!"
+    else
+        echo -e "[Tips]: nvm installing..."
+        curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash >&1
+        {
+            echo 'export NVM_DIR="$HOME/.nvm"'
+            echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"                   # This loads nvm'
+            echo '[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion" # This loads nvm bash_completion'
+        } >>~/.zshrc
+
+        if command -v nvm >/dev/null 2>&1; then
+            echo -e "[Tips]:\033[31m nvm install error \033[0m"
+        else
+            nvm --version
+            npm -v
+            nvm install 16.20.0
+            nvm alias default 16.20.0
+            echo -e "[Tips]: node 16.20.0 install success!"
+        fi
+
+        # curl -fsSL https://deb.nodesource.com/setup_10.x -o nodesource_setup.sh
+        # apt install -y nodejs >/dev/null 2>&1
+    fi
 }
 
 system_config
 init_git
 install_zsh
-
-# PS3='Please enter your choice: '
-# options=("vscode" "node" "python" "Quit")
-# select opt in "${options[@]}"; do
-#     case $opt in
-#     "Option 1")
-#         echo "you chose choice 1"
-#         ;;
-#     "Option 2")
-#         echo "you chose choice 2"
-#         ;;
-#     "Option 3")
-#         echo "you chose choice 3"
-#         ;;
-#     "Quit")
-#         break
-#         ;;
-#     *) echo invalid option ;;
-#     esac
-# done
+install_zsh_plugins
+# install_vscode
