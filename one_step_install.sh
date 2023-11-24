@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 declare -a common_packages=(
-    curl wget git zsh tmux bat unzip
+    curl wget git zsh tmux unzip openssh-server
     silversearcher-ag fonts-powerline lsb_release
 )
 
@@ -126,8 +126,9 @@ set_tmux_plugins() {
 }
 # oh_my_zsh
 install_oh_my_zsh() {
+    chsh -s $(which zsh)
     echo -e "[*]: Installing ohmyzsh... "
-    # sh -c "$(wget https://github.com/oh-my-zsh/raw/master/tools/install.sh -O-)"
+    #sh -c "$(wget -qO- https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
     sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
 
     echo -e "[*]: Installing zsh plugins..."
@@ -266,9 +267,8 @@ install_python() {
     sudo apt-get install -y python3-pip >/dev/null >&1
 
     echo -e "[*]: Anaconda3-5.2.0-Linux-x86_64.sh installing... "
-    curl -O https://repo.anaconda.com/archive/Anaconda3-5.2.0-Linux-x86_64.sh | bash >&1
-    echo -e "[*]: Anaconda3-5.2.0-Linux-x86_64.sh install success ! "
-    echo -e "\033[32;1m[*]: Anaconda3-5.2.0-Linux-x86_64.sh install success! \033[0m"
+    curl -O https://repo.anaconda.com/archive/Anaconda3-5.2.0-Linux-x86_64.sh | zsh >&1
+    echo -e "\033[32;1m[*]: Anaconda3-5.2.0-Linux-x86_64.sh download success! \033[0m"
 
 }
 # docker
@@ -398,6 +398,25 @@ scientific_surfing() {
     echo "Please use the proxy responsibly and do not download or stream large amounts of data."
     curl ipinfo.io
 }
+# 设置clash全局代理
+set_global_clash_proxy() {
+    echo -e "[*]: Seting clash to proxy..."
+    # 设置http和https代理
+    gsettings set org.gnome.system.proxy mode 'manual'
+    gsettings set org.gnome.system.proxy.http host '127.0.0.1'
+    gsettings set org.gnome.system.proxy.http port 7890
+    gsettings set org.gnome.system.proxy.https host '127.0.0.1'
+    gsettings set org.gnome.system.proxy.https port 7890
+
+    # 设置终端代理
+    echo 'export http_proxy="http://127.0.0.1:7890"' >>~/.bashrc
+    echo 'export https_proxy="http://127.0.0.1:7890"' >>~/.bashrc
+    echo 'export HTTP_PROXY="http://127.0.0.1:7890"' >>~/.bashrc
+    echo 'export HTTPS_PROXY="http://127.0.0.1:7890"' >>~/.bashrc
+
+    # 使终端代理生效
+    source ~/.bashrc
+}
 
 main() {
     if [ "$1" = "--all" ] || [ "$1" = "-a" ]; then
@@ -420,6 +439,7 @@ main() {
     echo -e "\033[32;1m (8) set ssh \033[0m"
     echo -e "\033[32;1m (9) tmux plugin \033[0m"
     echo -e "\033[32;1m (10) chrome \033[0m"
+    echo -e "\033[32;1m (11) set global proxy 7890 for clash \033[0m"
     echo -e "\033[31;1m (*) Anything else to exit \033[0m"
     echo -e "\033[31;1m (*) x-1 is uninstall ,eg.7-1 \033[0m"
     echo -en "\033[32;1m ==> \033[0m"
@@ -438,6 +458,7 @@ main() {
     "8") set_ssh_port ;;
     "9") install_tmux_plugins ;;
     "10") install_chrome ;;
+    "11") set_global_clash_proxy ;;
     "2-1") uninstall_oh_my_zsh ;;
     "4-1") uninstall_node ;;
     "7-1") uninstall_docker ;;

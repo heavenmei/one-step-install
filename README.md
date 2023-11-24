@@ -24,6 +24,10 @@ https://github.com/Heaven117/one-step-install
     
 2. 重启终端，配置主题
 
+如果安装卡住，可能是网络不好
+解决1、`zsh one_step_install.sh`, 选择oscientific_surfing，再次安装
+解决2、直接 `zsh install_ohmyzsh.sh`, 
+
 ### nvm & node
 
 默认安装nvm，及node 16.20.0
