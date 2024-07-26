@@ -32,3 +32,16 @@ https://github.com/Heaven117/one-step-install
 
 默认安装nvm，及node 16.20.0
 
+
+### 自动连接校园网
+手动修改/创建`.env` 文件，写入username & password
+执行auto_login.py
+
+ubuntu 定时执行任务
+```bash
+sudo vim /etc/crontab
+
+sudo service cron status
+sudo service cron restart
+
+```

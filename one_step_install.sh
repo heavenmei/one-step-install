@@ -3,6 +3,7 @@
 declare -a common_packages=(
     curl wget git zsh tmux unzip openssh-server
     silversearcher-ag fonts-powerline lsb_release
+    net-tools
 )
 
 get_system_kind() {
@@ -188,7 +189,6 @@ init_git() {
         read -p "Enter your git user.email:" userEmail
         git config --global user.email "$userEmail"
     fi
-    git config --list
     echo "[*]: git init completed! "
 
 }
@@ -266,9 +266,10 @@ install_python() {
     echo -e "[*]: python3-pip installing"
     sudo apt-get install -y python3-pip >/dev/null >&1
 
+    # https://repo.anaconda.com/archive/index.html
     echo -e "[*]: Anaconda3-5.2.0-Linux-x86_64.sh installing... "
-    curl -O https://repo.anaconda.com/archive/Anaconda3-5.2.0-Linux-x86_64.sh | zsh >&1
-    echo -e "\033[32;1m[*]: Anaconda3-5.2.0-Linux-x86_64.sh download success! \033[0m"
+    curl -O https://repo.anaconda.com/archive/Anaconda3-2023.09-0-Linux-x86_64.sh | zsh >&1
+    echo -e "\033[32;1m[*]: Anaconda3-2023.09-0-Linux-x86_64.sh download success! \033[0m"
 
 }
 # docker
@@ -329,7 +330,8 @@ uninstall_docker() {
 }
 
 # tmux
-install_tmux_plugins() {
+install_tmux() {
+    apt-get install -y tmux 
     echo -e "[*]: Installing tmux plugins... "
     # 安装Tmux插件管理器（TPM）
     git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
@@ -347,6 +349,9 @@ set -g @plugin 'tmux-plugins/tmux-sidebar'
 
 # 初始化TPM插件
 run '~/.tmux/plugins/tpm/tpm'
+# set -g mouse on # 支持鼠标选取文本等
+set-option -g mouse on
+
 EOF
 
     # 重新加载tmux配置
@@ -456,7 +461,7 @@ main() {
     "6") install_vscode ;;
     "7") install_docker ;;
     "8") set_ssh_port ;;
-    "9") install_tmux_plugins ;;
+    "9") install_tmux ;;
     "10") install_chrome ;;
     "11") set_global_clash_proxy ;;
     "2-1") uninstall_oh_my_zsh ;;
