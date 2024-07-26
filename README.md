@@ -36,6 +36,7 @@ https://github.com/Heaven117/one-step-install
 ### 自动连接校园网
 手动修改/创建`.env` 文件，写入username & password
 执行auto_login.py
+`/home/haiwen/anaconda3/bin/python /home/haiwen/autoNetwork/auto_login.py` 
 
 ubuntu 定时执行任务
 ```bash
